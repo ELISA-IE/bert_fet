@@ -28,7 +28,8 @@ def extract_data(entity_type_file: str,
                  ontology_file: str,
                  output_file: str,
                  title_field_name: str = 'title',
-                 db_port: int = 27017):
+                 db_port: int = 27017,
+                 col_name: str = 'enwiki'):
     """Extracts data from the database.
 
     Args:
@@ -38,9 +39,10 @@ def extract_data(entity_type_file: str,
         ontology_file (str): path to the ontology file. This file is in TXT
             format, where each line is a target entity type.
         output_file (str): path to the output file.
-        title_field_name (str, optional): Field name for entity titles. Defaults
+        title_field_name (str, optional): field name for entity titles. Defaults
             to 'title'.
-        db_port (int): MongoDB database port. Defaults to 27017.
+        db_port (int, optional): MongoDB database port. Defaults to 27017.
+        col_name (str, optional): collection name. Defaults to "enwiki".
     
     Notes:
 
@@ -101,7 +103,7 @@ def extract_data(entity_type_file: str,
 
     with open(output_file, 'w', encoding='utf-8') as w:
         with MongoClient(host='127.0.0.1', port=db_port) as client:
-            col = client['enwiki']['sentences']
+            col = client[col_name]['sentences']
 
             for doc_idx, doc in enumerate(col.find({'len_links': {'$gt': 0}}), 1):
                 doc_id = doc['id']
@@ -185,6 +187,8 @@ def parse_arguments() -> Namespace:
                         help='MongoDB database port (default = 27017).')
     parser.add_argument('-t', '--title', default='title',
                         help='Field name for entity titles.')
+    parser.add_argument('-c', '--col_name', default='enwiki',
+                        help='Collection name')
     args = parser.parse_args()
     return args
 
@@ -195,7 +199,8 @@ def main():
                  args.ontology_file,
                  args.output,
                  args.title,
-                 args.port)
+                 args.port,
+                 args.col_name)
 
 
 if __name__ == '__main__':
